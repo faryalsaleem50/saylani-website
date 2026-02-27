@@ -1,6 +1,6 @@
 import { useState } from "react";
 import LostFound from "../components/LostFound";
-import Complaints from "../components/complaints"; 
+import Complaints from "../components/Complaints"; 
 import Volunteers from "../components/Volunteers";  // ✅ ADDED
 
 export default function Dashboard({ user, onLogout }) {

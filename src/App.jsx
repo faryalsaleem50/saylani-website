@@ -1,53 +1,48 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./library/supabaseclient";
-import Login from "./pages/login";
-import Signup from "./pages/signup";
+import Auth from "./components/Authform";  // Login/Signup page
 import Dashboard from "./pages/dashboard";
 
-
-
 export default function App() {
-  const [page, setPage] = useState("login"); // "login", "signup", "dashboard"
-  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // agar user already logged in hai to direct dashboard
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        setUser(data.user);
-        setPage("dashboard");
-      }
-    };
-    checkSession();
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {page === "signup" && (
-        <Signup
-          onHaveAccountClick={() => setPage("login")}
-          onSignupSuccess={() => setPage("dashboard")}
-        />
-      )}
+  // 🔥 SHOW LOGIN FIRST - No Access Denied!
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
 
-      {page === "login" && (
-        <Login
-          onDontHaveAccountClick={() => setPage("signup")}
-          onLoginSuccess={() => setPage("dashboard")}
-        />
-      )}
+  // No user = Show Login page
+  if (!session) {
+    return <Auth />;
+  }
 
-      {page === "dashboard" && (
-        <Dashboard
-          user={user}
-          onLogout={() => {
-            supabase.auth.signOut();
-            setUser(null);
-            setPage("login");
-          }}
-        />
-      )}
-    </div>
-  );
+  // User logged in = Show Dashboard
+  return <Dashboard user={session.user} onLogout={handleLogout} />;
 }
+
+const handleLogout = async () => {
+  await supabase.auth.signOut();
+};

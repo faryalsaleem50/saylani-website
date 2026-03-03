@@ -1,97 +1,90 @@
+// src/pages/Auth.jsx
 import { useState } from "react";
+import { supabase } from "../library/supabaseclient";
 
-export default function AuthForm({
-  title,
-  submitLabel,
-  onSubmit,
-  onSwitch,
-  switchText,
-  switchLinkText,
-}) {
+export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
-      await onSubmit({ email, password });
-    } catch (err) {
-      setError(err.message);
+      if (isLogin) {
+        // ✅ LOGIN - Correct
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+      } else {
+        // ✅ SIGNUP - CORRECTED!
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) throw error;
+        alert("sign up successful"); // Signup success
+      }
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-400   px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          {/* Header: simple pink color */}
-          <div className="bg-pink-500 px-8 py-6 text-white">
-            <h2 className="text-2xl font-bold">{title}</h2>
+    <div className="min-h-screen bg-green-500 flex items-center justify-center p-4">
+      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-green-500 bg-clip-text text-transparent mb-2">
+            Saylani IT Hub
+          </h1>
+          <p className="text-gray-600">{isLogin ? "Login" : "Sign Up"}</p>
+        </div>
+
+        <form onSubmit={handleAuth} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="your@email.com"
+              required
+            />
           </div>
-
-          <div className="p-8">
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="mb-5">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-pink-500 text-white py-3 rounded-lg font-medium hover:bg-pink-600 disabled:opacity-70 transition transform hover:scale-[1.01]"
-              >
-                {loading ? "Processing..." : submitLabel}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                {switchText}{" "}
-                <button
-                  onClick={onSwitch}
-                  className="text-pink-600 font-medium hover:text-pink-800 transition"
-                >
-                  {switchLinkText}
-                </button>
-              </p>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="••••••••"
+              required
+            />
           </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-green-500 text-white py-3 px-6 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all"
+          >
+            {loading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            {isLogin ? "Don't have account? Sign Up" : "Already have account? Login"}
+          </button>
         </div>
       </div>
     </div>

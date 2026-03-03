@@ -4,6 +4,7 @@ import { supabase } from "../library/supabaseclient";
 export default function LostFound() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('lost'); // Added category state
   const [file, setFile] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ export default function LostFound() {
         .update({ 
           title, 
           description, 
+          category, // Added category to update
           image_url: imagePath || items.find(item => item.id === editingId)?.image_url 
         })
         .eq('id', editingId);
@@ -73,7 +75,7 @@ export default function LostFound() {
     } else {
       // **RLS WILL CHECK USER_ID MATCHES**
       const { error } = await supabase.from('lost_found_items').insert({
-        title, description, image_url: imagePath, 
+        title, description, category, image_url: imagePath, // Added category
         status: 'pending', user_id: userId
       });
       
@@ -84,7 +86,7 @@ export default function LostFound() {
       }
     }
 
-    setTitle(''); setDescription(''); setFile(null);
+    setTitle(''); setDescription(''); setCategory('lost'); setFile(null); // Reset category
     fetchItems();
     setLoading(false);
   };
@@ -124,6 +126,15 @@ export default function LostFound() {
               className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" required />
           </div>
           
+          {/* NEW CATEGORY DROPDOWN */}
+          <div>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}
+              className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white">
+              <option value="lost">🔍 Lost Item</option>
+              <option value="found">✅ Found Item</option>
+            </select>
+          </div>
+          
           <div>
             <textarea placeholder="Description" value={description} 
               onChange={(e) => setDescription(e.target.value)} rows="4"
@@ -143,7 +154,7 @@ export default function LostFound() {
             </button>
             {editingId && (
               <button type="button" onClick={() => {
-                setEditingId(null); setTitle(''); setDescription(''); setFile(null);
+                setEditingId(null); setTitle(''); setDescription(''); setCategory('lost'); setFile(null);
               }} className="w-full bg-gray-500 hover:bg-gray-600 text-white py-4 px-8 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
                 Cancel
               </button>
@@ -159,7 +170,7 @@ export default function LostFound() {
         </h3>
         
         {items.length === 0 ? (
-          <p className="text-center text-gray-500 py-12 text-xl">No items yet!</p>
+         <p className="text-center text-gray-500 py-12 text-xl">No items yet!</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {items.map((item) => (
@@ -172,6 +183,7 @@ export default function LostFound() {
                       <button onClick={() => {
                         setTitle(item.title);
                         setDescription(item.description);
+                        setCategory(item.category || 'lost'); // Load category for edit
                         setEditingId(item.id);
                       }} className="text-blue-600 text-2xl hover:scale-110" title="Edit">✏️</button>
                       <button onClick={() => handleDelete(item.id)} className="text-red-600 text-2xl hover:scale-110" title="Delete">🗑️</button>
@@ -196,6 +208,12 @@ export default function LostFound() {
                     item.status === 'found' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
                   }`}>
                     {item.status?.toUpperCase()}
+                  </span>
+                  {/* Show category badge */}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    item.category === 'found' ? 'bg-blue-200 text-blue-800' : 'bg-orange-200 text-orange-800'
+                  }`}>
+                    {item.category?.toUpperCase()}
                   </span>
                   <span className="text-gray-500">{new Date(item.created_at).toLocaleDateString()}</span>
                 </div>

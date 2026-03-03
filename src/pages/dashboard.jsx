@@ -198,7 +198,7 @@ export default function Dashboard({ user, onLogout }) {
             {isAdmin && <span className="ml-2 text-purple-600 font-bold text-sm bg-purple-100 px-2 py-1 rounded-full">👑 ADMIN</span>}
           </h2>
           <p className="text-gray-600">
-            {loadingStats ? 'Loading...' : `${stats.totalUsers} users, ${stats.totalVolunteers} volunteers`}
+            all activites show here,
           </p>
         </div>
 
